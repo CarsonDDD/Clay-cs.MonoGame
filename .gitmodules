@@ -1,0 +1,3 @@
+[submodule "clay-cs"]
+	path = clay-cs
+	url = https://github.com/Orcolom/clay-cs.git
