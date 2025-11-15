@@ -67,7 +67,7 @@ public class Game1 : Game, IDisposable
 
         // # Actual Content Loading
 
-        // I do not know why the original sample used string literals?
+        // <3
         _documents =[
             new Document
             {
@@ -125,7 +125,7 @@ public class Game1 : Game, IDisposable
 
         using(Clay.Element(new Clay_ElementDeclaration
         {
-            id = Clay.Id(_clayString["OuterContainer"]),
+            //id = Clay.Id(_clayString["OuterContainer"]),
             backgroundColor = new Clay_Color(43, 41, 51),
             layout = new Clay_LayoutConfig
             {
@@ -139,7 +139,7 @@ public class Game1 : Game, IDisposable
             // Header bar
             using(Clay.Element(new Clay_ElementDeclaration
             {
-                id = Clay.Id(_clayString["HeaderBar"]),
+                //id = Clay.Id(_clayString["HeaderBar"]),
                 backgroundColor = _contentBackgroundColor,
                 cornerRadius = Clay_CornerRadius.All(8),
                 layout = new Clay_LayoutConfig
@@ -155,17 +155,17 @@ public class Game1 : Game, IDisposable
                 var fileMenuStr = _clayString["FileMenu"];
 
                 // File button
-                using(Clay.Element(new Clay_ElementDeclaration
+                using(Clay.Element(Clay.Id(fileButtonStr), new()
                 {
-                    id = Clay.Id(fileButtonStr),
-                    layout = new Clay_LayoutConfig { 
-                        padding = Clay_Padding.HorVer(16, 8) 
+                    layout = new()
+                    {
+                        padding = Clay_Padding.HorVer(16, 8)
                     },
                     backgroundColor = new Clay_Color(140, 140, 140),
-                    cornerRadius = Clay_CornerRadius.All(5)
+                    cornerRadius = Clay_CornerRadius.All(5),
                 }))
                 {
-                    Clay.OpenTextElement("File", new Clay_TextElementConfig { 
+                    Clay.TextElement("File", new Clay_TextElementConfig { 
                         fontId = 0, 
                         fontSize = 1, //Scalar value for SPRITE font
                         textColor = new Clay_Color(255, 255, 255) 
@@ -175,31 +175,31 @@ public class Game1 : Game, IDisposable
 
                     if(isMenuVisible)
                     {
-                        using(Clay.Element(new Clay_ElementDeclaration
+                        using(Clay.Element(Clay.Id(fileMenuStr), new()
                         {
-                            id = Clay.Id(fileMenuStr),
-                            floating = new Clay_FloatingElementConfig
+                            floating = new()
                             {
                                 attachTo = Clay_FloatingAttachToElement.CLAY_ATTACH_TO_PARENT,
                                 attachPoints = new Clay_FloatingAttachPoints
                                 {
-                                    parent = Clay_FloatingAttachPointType.CLAY_ATTACH_POINT_LEFT_BOTTOM
+                                    parent = Clay_FloatingAttachPointType.CLAY_ATTACH_POINT_LEFT_BOTTOM,
                                 }
                             },
-                            layout = new Clay_LayoutConfig { 
-                                padding = Clay_Padding.Ver(8) 
+                            layout = new()
+                            {
+                                padding = Clay_Padding.Ver(8),
                             }
                         }))
                         {
-                            using(Clay.Element(new Clay_ElementDeclaration
+                            using(Clay.Element(new()
                             {
-                                layout = new Clay_LayoutConfig
+                                layout = new()
                                 {
                                     layoutDirection = Clay_LayoutDirection.CLAY_TOP_TO_BOTTOM,
-                                    sizing = new Clay_Sizing(Clay_SizingAxis.Fixed(200), default)
+                                    sizing = new Clay_Sizing(Clay_SizingAxis.Fixed(200), default),
                                 },
                                 backgroundColor = new Clay_Color(40, 40, 40),
-                                cornerRadius = Clay_CornerRadius.All(8)
+                                cornerRadius = Clay_CornerRadius.All(8),
                             }))
                             {
                                 RenderDropdownItem(_clayString["New"]);
@@ -227,7 +227,7 @@ public class Game1 : Game, IDisposable
             // sidebar + main
             using(Clay.Element(new Clay_ElementDeclaration
             {
-                id = Clay.Id(_clayString["LowerContent"]),
+                //id = Clay.Id(_clayString["LowerContent"]),
                 layout = new Clay_LayoutConfig
                 {
                     sizing = new Clay_Sizing(Clay_SizingAxis.Grow(), Clay_SizingAxis.Grow()),
@@ -238,7 +238,7 @@ public class Game1 : Game, IDisposable
                 // Sidebar
                 using(Clay.Element(new Clay_ElementDeclaration
                 {
-                    id = Clay.Id(_clayString["Sidebar"]),
+                    //id = Clay.Id(_clayString["Sidebar"]),
                     backgroundColor = _contentBackgroundColor,
                     layout = new Clay_LayoutConfig
                     {
@@ -267,7 +267,7 @@ public class Game1 : Game, IDisposable
                                 cornerRadius = Clay_CornerRadius.All(8)
                             }))
                             {
-                                Clay.OpenTextElement(document.Title, new Clay_TextElementConfig 
+                                Clay.TextElement(document.Title, new Clay_TextElementConfig 
                                 { 
                                     fontId = 0, 
                                     fontSize = 1, 
@@ -277,7 +277,7 @@ public class Game1 : Game, IDisposable
                         }
                         else
                         {
-                            using(var sidebarButton = Clay.Element())
+                            using(var sidebarButton = Clay.OpenElement())
                             {
                                 sidebarButton.Configure(new Clay_ElementDeclaration
                                 {
@@ -295,7 +295,7 @@ public class Game1 : Game, IDisposable
                                         _selectedDocumentIndex = index;
                                 });
 
-                                Clay.OpenTextElement(document.Title, new Clay_TextElementConfig
+                                Clay.TextElement(document.Title, new Clay_TextElementConfig
                                 { 
                                     fontId = 0, 
                                     fontSize = 1, 
@@ -307,34 +307,35 @@ public class Game1 : Game, IDisposable
                 }
 
                 // main
-                using(Clay.Element(new Clay_ElementDeclaration
+                using(var content = Clay.OpenElement(Clay.Id(_clayString["MainContent"])))
                 {
-                    id = Clay.Id(_clayString["MainContent"]),
-                    scroll = new() { 
-                        vertical = true 
-                    },
-                    layout = new Clay_LayoutConfig
+                    content.Configure(new()
                     {
-                        layoutDirection = Clay_LayoutDirection.CLAY_TOP_TO_BOTTOM,
-                        childGap = 16,
-                        padding = Clay_Padding.All(16),
-                        sizing = new Clay_Sizing(Clay_SizingAxis.Grow(), Clay_SizingAxis.Grow())
-                    },
-                    backgroundColor = _contentBackgroundColor
-                }))
-                {
-                    var doc = _documents[_selectedDocumentIndex];
-                    Clay.OpenTextElement(doc.Title, new Clay_TextElementConfig
-                    { 
-                        fontId = 0,
-                        fontSize = 1,
-                        textColor = new Clay_Color(255, 255, 255)
+                        clip = new()
+                        {
+                            vertical = true,
+                            childOffset = Clay.GetScrollOffset(),
+                        },
+                        layout = new()
+                        {
+                            layoutDirection = Clay_LayoutDirection.CLAY_TOP_TO_BOTTOM,
+                            childGap = 16,
+                            padding = Clay_Padding.All(16),
+                            sizing = new Clay_Sizing(Clay_SizingAxis.Grow(), Clay_SizingAxis.Grow())
+                        },
+                        backgroundColor = _contentBackgroundColor,
                     });
-                    Clay.OpenTextElement(doc.Contents, new Clay_TextElementConfig
-                    { 
-                        fontId = 0,
+
+                    var doc = _documents[_selectedDocumentIndex];
+                    Clay.TextElement(doc.Title, new()
+                    {
                         fontSize = 1,
-                        textColor = new Clay_Color(255, 255, 255)
+                        textColor = new Clay_Color(255, 255, 255),
+                    });
+                    Clay.TextElement(doc.Contents, new()
+                    {
+                        fontSize = 1,
+                        textColor = new Clay_Color(255, 255, 255),
                     });
                 }
             }
@@ -362,7 +363,7 @@ public class Game1 : Game, IDisposable
             cornerRadius = Clay_CornerRadius.All(5)
         }))
         {
-            Clay.OpenTextElement(text, new Clay_TextElementConfig 
+            Clay.TextElement(text, new Clay_TextElementConfig 
             { 
                 fontId = 0, 
                 fontSize = 1, 
@@ -381,7 +382,7 @@ public class Game1 : Game, IDisposable
             }
         }))
         {
-            Clay.OpenTextElement(text, new Clay_TextElementConfig 
+            Clay.TextElement(text, new Clay_TextElementConfig 
             { 
                 fontId = 0, 
                 fontSize = 1, 
