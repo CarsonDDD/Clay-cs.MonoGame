@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clay-cs", "clay-cs\Clay-cs\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clay-cs.MonoGame", "Clay-cs.MonoGame\Clay-cs.MonoGame.csproj", "{253356B4-DD5D-4A3B-9C16-12D5810D85A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clay-cs.MonoGame.Example", "Clay-cs.MonoGame.Example\Clay-cs.MonoGame.Example.csproj", "{4AAA2847-7AF7-4597-9F7C-7C05AC914AC2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Clay-cs.MonoGame.Example", "Clay-cs.MonoGame.Examples\Clay-cs.MonoGame.Examples.csproj", "{4AAA2847-7AF7-4597-9F7C-7C05AC914AC2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
