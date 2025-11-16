@@ -71,6 +71,8 @@ public class MonoGameClay
 
         Rectangle viewportRect = graphicsDevice.Viewport.Bounds;
 
+        _scissorStack.Clear();
+
         for (int i = 0; i < array.length; i++)
         {
             var renderCommand = Clay.RenderCommandArrayGet(array, i);
