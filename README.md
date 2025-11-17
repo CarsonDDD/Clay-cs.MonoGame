@@ -1,6 +1,7 @@
 todo:
 - rounded corners
 - figure out better way to do fonts
+- complete pong example
 
 # Clay.MonoGame
 
