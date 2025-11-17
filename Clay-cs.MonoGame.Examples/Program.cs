@@ -1,2 +1,2 @@
-﻿using var game = new Clay_cs.MonoGame.Example.Game1();
+﻿using var game = new Clay_cs.MonoGame.Examples.ImageViewer();
 game.Run();

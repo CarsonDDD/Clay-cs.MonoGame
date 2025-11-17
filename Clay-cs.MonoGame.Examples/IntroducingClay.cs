@@ -5,9 +5,9 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Diagnostics;
 
-namespace Clay_cs.MonoGame.Example;
+namespace Clay_cs.MonoGame.Examples;
 
-public class Game1 : Game, IDisposable
+public class IntroducingClay : Game, IDisposable
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
@@ -22,7 +22,7 @@ public class Game1 : Game, IDisposable
     private int _selectedDocumentIndex = 0;
     private Clay_Color _contentBackgroundColor = new Clay_Color(90, 90, 90);
 
-    public Game1()
+    public IntroducingClay()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
@@ -68,7 +68,7 @@ public class Game1 : Game, IDisposable
         // # Actual Content Loading
 
         // <3
-        _documents =[
+        _documents = [
             new Document
             {
                 Title = _clayString.Get("Squirrels"),
@@ -123,7 +123,7 @@ public class Game1 : Game, IDisposable
 
         Clay.BeginLayout();
 
-        using(Clay.Element(new Clay_ElementDeclaration
+        using (Clay.Element(new Clay_ElementDeclaration
         {
             //id = Clay.Id(_clayString["OuterContainer"]),
             backgroundColor = new Clay_Color(43, 41, 51),
@@ -137,7 +137,7 @@ public class Game1 : Game, IDisposable
         }))
         {
             // Header bar
-            using(Clay.Element(new Clay_ElementDeclaration
+            using (Clay.Element(new Clay_ElementDeclaration
             {
                 //id = Clay.Id(_clayString["HeaderBar"]),
                 backgroundColor = _contentBackgroundColor,
@@ -155,7 +155,7 @@ public class Game1 : Game, IDisposable
                 var fileMenuStr = _clayString["FileMenu"];
 
                 // File button
-                using(Clay.Element(Clay.Id(fileButtonStr), new()
+                using (Clay.Element(Clay.Id(fileButtonStr), new()
                 {
                     layout = new()
                     {
@@ -165,17 +165,18 @@ public class Game1 : Game, IDisposable
                     cornerRadius = Clay_CornerRadius.All(5),
                 }))
                 {
-                    Clay.TextElement("File", new Clay_TextElementConfig { 
-                        fontId = 0, 
+                    Clay.TextElement("File", new Clay_TextElementConfig
+                    {
+                        fontId = 0,
                         fontSize = 1, //Scalar value for SPRITE font
-                        textColor = new Clay_Color(255, 255, 255) 
+                        textColor = new Clay_Color(255, 255, 255)
                     });
 
                     bool isMenuVisible = Clay.IsPointerOver(Clay.GetElementId(fileButtonStr)) || Clay.IsPointerOver(Clay.GetElementId(fileMenuStr));
 
-                    if(isMenuVisible)
+                    if (isMenuVisible)
                     {
-                        using(Clay.Element(Clay.Id(fileMenuStr), new()
+                        using (Clay.Element(Clay.Id(fileMenuStr), new()
                         {
                             floating = new()
                             {
@@ -191,7 +192,7 @@ public class Game1 : Game, IDisposable
                             }
                         }))
                         {
-                            using(Clay.Element(new()
+                            using (Clay.Element(new()
                             {
                                 layout = new()
                                 {
@@ -211,10 +212,11 @@ public class Game1 : Game, IDisposable
                 }
 
                 RenderHeaderButton(_clayString["Edit"]);
-                using(Clay.Element(new Clay_ElementDeclaration
+                using (Clay.Element(new Clay_ElementDeclaration
                 {
-                    layout = new Clay_LayoutConfig { 
-                        sizing = new Clay_Sizing(Clay_SizingAxis.Grow(), Clay_SizingAxis.Grow()) 
+                    layout = new Clay_LayoutConfig
+                    {
+                        sizing = new Clay_Sizing(Clay_SizingAxis.Grow(), Clay_SizingAxis.Grow())
                     }
                 })) { }
 
@@ -225,7 +227,7 @@ public class Game1 : Game, IDisposable
             }
 
             // sidebar + main
-            using(Clay.Element(new Clay_ElementDeclaration
+            using (Clay.Element(new Clay_ElementDeclaration
             {
                 //id = Clay.Id(_clayString["LowerContent"]),
                 layout = new Clay_LayoutConfig
@@ -236,7 +238,7 @@ public class Game1 : Game, IDisposable
             }))
             {
                 // Sidebar
-                using(Clay.Element(new Clay_ElementDeclaration
+                using (Clay.Element(new Clay_ElementDeclaration
                 {
                     //id = Clay.Id(_clayString["Sidebar"]),
                     backgroundColor = _contentBackgroundColor,
@@ -255,29 +257,29 @@ public class Game1 : Game, IDisposable
                         padding = Clay_Padding.All(8)
                     };
 
-                    for(int documentIndex = 0; documentIndex < _documents.Length; documentIndex++)
+                    for (int documentIndex = 0; documentIndex < _documents.Length; documentIndex++)
                     {
                         var document = _documents[documentIndex];
-                        if(documentIndex == _selectedDocumentIndex)
+                        if (documentIndex == _selectedDocumentIndex)
                         {
-                            using(Clay.Element(new Clay_ElementDeclaration
+                            using (Clay.Element(new Clay_ElementDeclaration
                             {
                                 layout = sidebarButtonLayout,
                                 backgroundColor = new Clay_Color(120, 120, 120, 255),
                                 cornerRadius = Clay_CornerRadius.All(8)
                             }))
                             {
-                                Clay.TextElement(document.Title, new Clay_TextElementConfig 
-                                { 
-                                    fontId = 0, 
-                                    fontSize = 1, 
-                                    textColor = new Clay_Color(255, 255, 255) 
+                                Clay.TextElement(document.Title, new Clay_TextElementConfig
+                                {
+                                    fontId = 0,
+                                    fontSize = 1,
+                                    textColor = new Clay_Color(255, 255, 255)
                                 });
                             }
                         }
                         else
                         {
-                            using(var sidebarButton = Clay.OpenElement())
+                            using (var sidebarButton = Clay.OpenElement())
                             {
                                 sidebarButton.Configure(new Clay_ElementDeclaration
                                 {
@@ -291,15 +293,15 @@ public class Game1 : Game, IDisposable
                                 // Commenting out the hover removes the ExecutionEngineException???
                                 Clay.OnHover((_, data, _) =>
                                 {
-                                    if(data.state == Clay_PointerDataInteractionState.CLAY_POINTER_DATA_PRESSED_THIS_FRAME)
+                                    if (data.state == Clay_PointerDataInteractionState.CLAY_POINTER_DATA_PRESSED_THIS_FRAME)
                                         _selectedDocumentIndex = index;
                                 });
 
                                 Clay.TextElement(document.Title, new Clay_TextElementConfig
-                                { 
-                                    fontId = 0, 
-                                    fontSize = 1, 
-                                    textColor = new Clay_Color(255, 255, 255) 
+                                {
+                                    fontId = 0,
+                                    fontSize = 1,
+                                    textColor = new Clay_Color(255, 255, 255)
                                 });
                             }
                         }
@@ -307,7 +309,7 @@ public class Game1 : Game, IDisposable
                 }
 
                 // main
-                using(var content = Clay.OpenElement(Clay.Id(_clayString["MainContent"])))
+                using (var content = Clay.OpenElement(Clay.Id(_clayString["MainContent"])))
                 {
                     content.Configure(new()
                     {
@@ -354,39 +356,40 @@ public class Game1 : Game, IDisposable
 
     private void RenderHeaderButton(Clay_String text)
     {
-        using(Clay.Element(new Clay_ElementDeclaration
+        using (Clay.Element(new Clay_ElementDeclaration
         {
-            layout = new Clay_LayoutConfig { 
-                padding = Clay_Padding.HorVer(16, 8) 
+            layout = new Clay_LayoutConfig
+            {
+                padding = Clay_Padding.HorVer(16, 8)
             },
             backgroundColor = new Clay_Color(140, 140, 140),
             cornerRadius = Clay_CornerRadius.All(5)
         }))
         {
-            Clay.TextElement(text, new Clay_TextElementConfig 
-            { 
-                fontId = 0, 
-                fontSize = 1, 
-                textColor = new Clay_Color(255, 255, 255) 
+            Clay.TextElement(text, new Clay_TextElementConfig
+            {
+                fontId = 0,
+                fontSize = 1,
+                textColor = new Clay_Color(255, 255, 255)
             });
         }
     }
 
     private void RenderDropdownItem(Clay_String text)
     {
-        using(Clay.Element(new Clay_ElementDeclaration
+        using (Clay.Element(new Clay_ElementDeclaration
         {
-            layout = new Clay_LayoutConfig 
-            { 
-                padding = Clay_Padding.All(16) 
+            layout = new Clay_LayoutConfig
+            {
+                padding = Clay_Padding.All(16)
             }
         }))
         {
-            Clay.TextElement(text, new Clay_TextElementConfig 
-            { 
-                fontId = 0, 
-                fontSize = 1, 
-                textColor = new Clay_Color(255, 255, 255) 
+            Clay.TextElement(text, new Clay_TextElementConfig
+            {
+                fontId = 0,
+                fontSize = 1,
+                textColor = new Clay_Color(255, 255, 255)
             });
         }
     }
