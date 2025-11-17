@@ -83,7 +83,6 @@ public unsafe class ImageViewer : Game, IDisposable
 
         var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
         Clay.UpdateScrollContainers(true, new System.Numerics.Vector2(0, wheelDelta / 60f), dt);
-        Clay.GetScrollOffset();
 
         base.Update(gameTime);
     }
