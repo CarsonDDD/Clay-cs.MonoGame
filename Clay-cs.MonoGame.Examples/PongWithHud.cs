@@ -7,8 +7,6 @@ using System.Diagnostics;
 
 namespace Clay_cs.MonoGame.Examples;
 
-// TODO: ability to unpause
-
 public unsafe class PongWithHud : Game, IDisposable
 {
     private GraphicsDeviceManager _graphics;
@@ -184,7 +182,7 @@ public unsafe class PongWithHud : Game, IDisposable
                 cornerRadius = Clay_CornerRadius.All(4)
             }))
             {
-                Clay.TextElement(_clayStrings.Get(_paused ? "Resume" : "Pause"), new Clay_TextElementConfig { fontId = 0, fontSize = 1, textColor = new Clay_Color(255, 255, 255) });
+                Clay.TextElement(_clayStrings.Get("Pause"), new Clay_TextElementConfig { fontId = 0, fontSize = 1, textColor = new Clay_Color(255, 255, 255) });
                 Clay.OnHover((_, data, _) =>
                 {
                     if(data.state == Clay_PointerDataInteractionState.CLAY_POINTER_DATA_PRESSED_THIS_FRAME)
@@ -236,6 +234,15 @@ public unsafe class PongWithHud : Game, IDisposable
                 textColor = new Clay_Color(255, 255, 255),
                 //textAlignment = Clay_TextAlignment.CLAY_TEXT_ALIGN_CENTER,// This is for the chars, the text BOX is centered from parent
             });
+
+            Clay.OnHover((_, data, _) =>
+            {
+                if(data.state == Clay_PointerDataInteractionState.CLAY_POINTER_DATA_PRESSED_THIS_FRAME)
+                {
+                    _paused = !_paused;
+                }
+            });
+
         }
     }
 
@@ -256,12 +263,13 @@ public unsafe class PongWithHud : Game, IDisposable
 
         // # UI after
         Clay.SetLayoutDimensions(new Clay_Dimensions(GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height));
-        
+
         // main
         Clay.BeginLayout();
         RenderTopBar();
         MonoGameClay.RenderCommands(Clay.EndLayout(), GraphicsDevice, _spriteBatch);
 
+        // This ui renders on a different layer. Note: the overlay blocks interaction with the main HUD.
         if(_paused)
         {
             // Seperate layout so it renders ontop instead of APART of the existing
@@ -271,7 +279,8 @@ public unsafe class PongWithHud : Game, IDisposable
         }
 
         // To solve the issue of the send layout blocking the button, we could do another layer for the button?
-        // I think unity has UI layers, but the better solution is probably have floating clickthrough to work?
+        // Unity has UI layers, but the better solution is probably have floating clickthrough to work?
+        // No. this is just a limitation to not handle this edge case
 
 
         base.Draw(gameTime);

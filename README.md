@@ -2,6 +2,7 @@ todo:
 - rounded corners
 - figure out better way to do fonts
 - complete pong example
+- find way to have things be click-through-transparent, so you can have like an overlay over the entire ui.
 
 # Clay.MonoGame
 
