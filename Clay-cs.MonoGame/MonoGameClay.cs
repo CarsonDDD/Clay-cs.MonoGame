@@ -1,5 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Clay_cs.MonoGame;
 
@@ -14,7 +16,7 @@ public class MonoGameClay
     static readonly Stack<ScissorFrame> _scissorStack = new();
 
     private static Color ToColor(Clay_Color c) => new Color(
-        (byte)MathF.Round(c.r),
+       (byte)MathF.Round(c.r),
         (byte)MathF.Round(c.g),
         (byte)MathF.Round(c.b),
         (byte)MathF.Round(c.a)
@@ -81,135 +83,148 @@ public class MonoGameClay
             switch (renderCommand->commandType)
             {
                 case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_RECTANGLE:
-                {
+                    {
 
-                    spriteBatch.Draw(_whitePixel,
-                        new Rectangle((int)MathF.Round(boundingBox.x), (int)MathF.Round(boundingBox.y), (int)MathF.Round(boundingBox.width), (int)MathF.Round(boundingBox.height)),
-                        ToColor(renderCommand->renderData.rectangle.backgroundColor)
-                    );
-                    break;
-                }
+                        spriteBatch.Draw(_whitePixel,
+                            new Rectangle((int)MathF.Round(boundingBox.x), (int)MathF.Round(boundingBox.y), (int)MathF.Round(boundingBox.width), (int)MathF.Round(boundingBox.height)),
+                            ToColor(renderCommand->renderData.rectangle.backgroundColor)
+                        );
+                        break;
+                    }
 
                 case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_TEXT:
-                {
-                    var text = renderCommand->renderData.text;
-                    var font = Fonts[text.fontId] ?? throw new ArgumentNullException("Font cannot be null");
-
-                    string full = text.stringContents.ToCSharpString();
-                    using var spanOwner = text.stringContents.ToSpanOwner();
-
-                    float scale = text.fontSize;
-                    float letterSpacing = text.letterSpacing * scale;
-                    float x0 = boundingBox.x;
-                    float y = boundingBox.y;
-
-                    int lineStart = 0;
-                    for(int idx = 0; idx <= full.Length; idx++)
                     {
-                        bool atEnd = (idx == full.Length);
-                        char ch = atEnd ? '\n' : full[idx];
-                        if(ch == '\n')
+                        var text = renderCommand->renderData.text;
+                        var font = Fonts[text.fontId] ?? throw new ArgumentNullException("Font cannot be null");
+
+                        string full = text.stringContents.ToCSharpString();
+                        using var spanOwner = text.stringContents.ToSpanOwner();
+
+                        float scale = text.fontSize;
+                        float letterSpacing = text.letterSpacing * scale;
+                        float x0 = boundingBox.x;
+                        float y = boundingBox.y;
+
+                        int lineStart = 0;
+                        for(int idx = 0; idx <= full.Length; idx++)
                         {
-                            DrawString(font, full.AsSpan(lineStart, idx - lineStart), x0, y, scale, letterSpacing, text.textColor, spriteBatch);
-                            y += font.LineSpacing * scale;
-                            lineStart = idx + 1;
+                            bool atEnd = (idx == full.Length);
+                            char ch = atEnd ? '\n' : full[idx];
+                            if(ch == '\n')
+                            {
+                                DrawString(font, full.AsSpan(lineStart, idx - lineStart), x0, y, scale, letterSpacing, text.textColor, spriteBatch);
+                                y += font.LineSpacing * scale;
+                                lineStart = idx + 1;
+                            }
                         }
+                        if(lineStart < full.Length)
+                        {
+                            DrawString(font, full.AsSpan(lineStart), x0, y, scale, letterSpacing, text.textColor, spriteBatch);
+                        }
+                        break;
                     }
-                    if(lineStart < full.Length)
-                    {
-                        DrawString(font, full.AsSpan(lineStart), x0, y, scale, letterSpacing, text.textColor, spriteBatch);
-                    }
-                    break;
-                }
 
                 case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_IMAGE:
-                {
-                    var image = renderCommand->renderData.image;
+                    {
+                        var image = renderCommand->renderData.image;
 
-                    var tint = image.backgroundColor;
-                    bool zeroTint = (tint.r == 0 && tint.g == 0 && tint.b == 0 && tint.a == 0);
-                    var color = zeroTint ? Color.White : ToColor(tint);
+                        var tint = image.backgroundColor;
+                        bool zeroTint = (tint.r == 0 && tint.g == 0 && tint.b == 0 && tint.a == 0);
+                        var color = zeroTint ? Color.White : ToColor(tint);
 
-                    spriteBatch.Draw(
-                        *(Texture2D*)image.imageData,
-                        new Rectangle((int)MathF.Round(boundingBox.x), (int)MathF.Round(boundingBox.y), (int)MathF.Round(boundingBox.width), (int)MathF.Round(boundingBox.height)), 
-                        color
-                        );
-                    break;
-                }
+                        Texture2D? texture = null;
+                        if (image.imageData != null)
+                        {
+                            //texture = *(Texture2D*)image.imageData;
+                            var handle = GCHandle.FromIntPtr((IntPtr)image.imageData);
+                            texture = handle.Target as Texture2D;
+                        }
+
+                        if(texture == null) throw new ArgumentNullException("Texture cannot be null");
+
+
+                        spriteBatch.Draw(
+                                 texture,
+                                 new Rectangle((int)MathF.Round(boundingBox.x), (int)MathF.Round(boundingBox.y), (int)MathF.Round(boundingBox.width), (int)MathF.Round(boundingBox.height)),
+                                color
+                            );
+
+
+                        break;
+                    }
 
                 case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_BORDER:
-                {
-                    var b = renderCommand->renderData.border;
-
-                    int x = (int)MathF.Round(boundingBox.x);
-                    int y = (int)MathF.Round(boundingBox.y);
-                    int w = (int)MathF.Round(boundingBox.width);
-                    int h = (int)MathF.Round(boundingBox.height);
-
-                    int lw = b.width.left;
-                    int rw = b.width.right;
-                    int tw = b.width.top;
-                    int bw = b.width.bottom;
-
-                    // Strange that these need to be floats
-                    int tl = (int)MathF.Round(b.cornerRadius.topLeft);
-                    int tr = (int)MathF.Round(b.cornerRadius.topRight);
-                    int bl = (int)MathF.Round(b.cornerRadius.bottomLeft);
-                    int br = (int)MathF.Round(b.cornerRadius.bottomRight);
-
-                    var color = ToColor(b.color);
-
-                    if(tw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x + tl, y, Math.Max(0, w - tl - tr), tw), color);
-
-                    if(bw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x + bl, y + h - bw, Math.Max(0, w - bl - br), bw), color);
-
-                    if(lw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x, y + tl, lw, Math.Max(0, h - tl - bl)), color);
-
-                    if(rw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x + w - rw, y + tr, rw, Math.Max(0, h - tr - br)), color);
-
-                    // todo: corner rendering
-                    break;
-                }
-                case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_SCISSOR_START:
-                {
-                    spriteBatch.End();
-                    var rect = new Rectangle((int)MathF.Round(boundingBox.x),(int)MathF.Round(boundingBox.y),(int)MathF.Round(boundingBox.width),(int)MathF.Round(boundingBox.height));
-
-                    rect = Rectangle.Intersect(rect, viewportRect);
-
-                    _scissorStack.Push(new ScissorFrame
                     {
-                        Rect = graphicsDevice.ScissorRectangle,
-                        Enabled = graphicsDevice.RasterizerState.ScissorTestEnable
-                    });
+                        var b = renderCommand->renderData.border;
 
-                    graphicsDevice.ScissorRectangle = rect;
-                    spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,DepthStencilState.None, RsScissorOn);
-                    break;
-                }
+                        int x = (int)MathF.Round(boundingBox.x);
+                        int y = (int)MathF.Round(boundingBox.y);
+                        int w = (int)MathF.Round(boundingBox.width);
+                        int h = (int)MathF.Round(boundingBox.height);
+
+                        int lw = b.width.left;
+                        int rw = b.width.right;
+                        int tw = b.width.top;
+                        int bw = b.width.bottom;
+
+                        // Strange that these need to be floats
+                        int tl = (int)MathF.Round(b.cornerRadius.topLeft);
+                        int tr = (int)MathF.Round(b.cornerRadius.topRight);
+                        int bl = (int)MathF.Round(b.cornerRadius.bottomLeft);
+                        int br = (int)MathF.Round(b.cornerRadius.bottomRight);
+
+                        var color = ToColor(b.color);
+
+                        if(tw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x + tl, y, Math.Max(0, w - tl - tr), tw), color);
+
+                        if(bw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x + bl, y + h - bw, Math.Max(0, w - bl - br), bw), color);
+
+                        if(lw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x, y + tl, lw, Math.Max(0, h - tl - bl)), color);
+
+                        if(rw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x + w - rw, y + tr, rw, Math.Max(0, h - tr - br)), color);
+
+                        // todo: corner rendering
+                        break;
+                    }
+                case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_SCISSOR_START:
+                    {
+                        spriteBatch.End();
+                        var rect = new Rectangle((int)MathF.Round(boundingBox.x),(int)MathF.Round(boundingBox.y),(int)MathF.Round(boundingBox.width),(int)MathF.Round(boundingBox.height));
+
+                        rect = Rectangle.Intersect(rect, viewportRect);
+
+                        _scissorStack.Push(new ScissorFrame
+                        {
+                            Rect = graphicsDevice.ScissorRectangle,
+                            Enabled = graphicsDevice.RasterizerState.ScissorTestEnable
+                        });
+
+                        graphicsDevice.ScissorRectangle = rect;
+                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp,DepthStencilState.None, RsScissorOn);
+                        break;
+                    }
 
                 case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_SCISSOR_END:
-                {
-                    spriteBatch.End();
-
-                    ScissorFrame prev = _scissorStack.Count > 0? _scissorStack.Pop(): default;
-
-                    if(prev.Enabled)
                     {
-                        graphicsDevice.ScissorRectangle = Rectangle.Intersect(prev.Rect, viewportRect);
-                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RsScissorOn);
+                        spriteBatch.End();
+
+                        ScissorFrame prev = _scissorStack.Count > 0? _scissorStack.Pop(): default;
+
+                        if(prev.Enabled)
+                        {
+                            graphicsDevice.ScissorRectangle = Rectangle.Intersect(prev.Rect, viewportRect);
+                            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RsScissorOn);
+                        }
+                        else
+                        {
+                            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RsScissorOff);
+                        }
+                        break;
                     }
-                    else
-                    {
-                        spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RsScissorOff);
-                    }
-                    break;
-                }
 
                 case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_CUSTOM:
                 case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_NONE:
-                break;
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
