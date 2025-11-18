@@ -1,8 +1,8 @@
-using Clay_cs.MonoGame;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Clay_cs.MonoGame.Examples;
@@ -13,6 +13,8 @@ public unsafe class PongWithHud : Game, IDisposable
     private SpriteBatch _spriteBatch;
     private ClayArenaHandle _arena;
     private ClayStringCollection _clayStrings = new ClayStringCollection();
+    private Texture2D _texturePrimitive;
+    Stack<ScissorFrame> _scissorStack = new Stack<ScissorFrame>();
 
     // Game state
     private Texture2D _ballTexture;
@@ -48,8 +50,8 @@ public unsafe class PongWithHud : Game, IDisposable
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         // white pixel
-        MonoGameClay._whitePixel = new Texture2D(GraphicsDevice, 1, 1);
-        MonoGameClay._whitePixel.SetData(new[] { Color.White });
+        _texturePrimitive = new Texture2D(GraphicsDevice, 1, 1);
+        _texturePrimitive.SetData(new[] { Color.White });
         MonoGameClay.Fonts[0] = Content.Load<SpriteFont>("myfont");
 
         uint requiredSize = Clay.MinMemorySize();
@@ -253,8 +255,8 @@ public unsafe class PongWithHud : Game, IDisposable
         // # Gameplay
         _spriteBatch.Begin();
 
-        _spriteBatch.Draw(MonoGameClay._whitePixel, _leftPaddle, Color.White);
-        _spriteBatch.Draw(MonoGameClay._whitePixel, _rightPaddle, Color.White);
+        _spriteBatch.Draw(_texturePrimitive, _leftPaddle, Color.White);
+        _spriteBatch.Draw(_texturePrimitive, _rightPaddle, Color.White);
 
         _spriteBatch.Draw(_ballTexture, new Rectangle((int)_ballPos.X - _ballSize / 2, (int)_ballPos.Y - _ballSize / 2, _ballSize, _ballSize), Color.Yellow);
 
@@ -267,7 +269,7 @@ public unsafe class PongWithHud : Game, IDisposable
         // main
         Clay.BeginLayout();
         RenderTopBar();
-        MonoGameClay.RenderCommands(Clay.EndLayout(), GraphicsDevice, _spriteBatch);
+        MonoGameClay.RenderCommands(Clay.EndLayout(), GraphicsDevice, _spriteBatch, _texturePrimitive, _scissorStack);
 
         // This ui renders on a different layer. Note: the overlay blocks interaction with the main HUD.
         if(_paused)
@@ -275,7 +277,7 @@ public unsafe class PongWithHud : Game, IDisposable
             // Seperate layout so it renders ontop instead of APART of the existing
             Clay.BeginLayout();
             RenderPauseOverlay();
-            MonoGameClay.RenderCommands(Clay.EndLayout(), GraphicsDevice, _spriteBatch);
+            MonoGameClay.RenderCommands(Clay.EndLayout(), GraphicsDevice, _spriteBatch, _texturePrimitive, _scissorStack);
         }
 
         // To solve the issue of the send layout blocking the button, we could do another layer for the button?
@@ -308,7 +310,8 @@ public unsafe class PongWithHud : Game, IDisposable
     {
         _clayStrings.Dispose();
         _spriteBatch?.Dispose();
-        MonoGameClay._whitePixel?.Dispose();
+        _texturePrimitive.Dispose();
         _arena.Dispose();
+        _scissorStack.Clear();
     }
 }

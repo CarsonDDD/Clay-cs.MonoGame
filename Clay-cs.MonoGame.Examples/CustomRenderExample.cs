@@ -1,8 +1,8 @@
-﻿using Clay_cs.MonoGame;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
@@ -14,6 +14,8 @@ public unsafe class CustomRenderExample : Game, IDisposable
     private SpriteBatch _spriteBatch;
     private ClayArenaHandle _arena;
     private ClayStringCollection _clayString = new ClayStringCollection();
+    private Texture2D _texturePrimitive;
+    Stack<ScissorFrame> _scissorStack = new Stack<ScissorFrame>();
 
     private CustomRenderCommandCollection _customRenderers = new CustomRenderCommandCollection();
 
@@ -48,8 +50,8 @@ public unsafe class CustomRenderExample : Game, IDisposable
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         // white pixel and font
-        MonoGameClay._whitePixel = new Texture2D(GraphicsDevice, 1, 1);
-        MonoGameClay._whitePixel.SetData(new[] { Color.White });
+        _texturePrimitive = new Texture2D(GraphicsDevice, 1, 1);
+        _texturePrimitive.SetData(new[] { Color.White });
         MonoGameClay.Fonts[0] = Content.Load<SpriteFont>("myfont");
 
         uint requiredSize = Clay.MinMemorySize();
@@ -66,7 +68,7 @@ public unsafe class CustomRenderExample : Game, IDisposable
         _customRenderers.RegisterCustomRenderer(1, (void* customData, Clay_BoundingBox bb, GraphicsDevice gd, SpriteBatch sb) =>
         {
             var rect = new Rectangle((int)MathF.Round(bb.x), (int)MathF.Round(bb.y), (int)MathF.Round(bb.width), (int)MathF.Round(bb.height));
-            sb.Draw(MonoGameClay._whitePixel, rect, Color.Magenta * 0.6f);
+            sb.Draw(_texturePrimitive, rect, Color.Magenta * 0.6f);
 
             CustomRenderData data = *(CustomRenderData*)customData; // Cast void pointer into expected info
 
@@ -124,7 +126,7 @@ public unsafe class CustomRenderExample : Game, IDisposable
 
         var commands = Clay.EndLayout();
 
-        MonoGameClay.RenderCommands(commands, GraphicsDevice, _spriteBatch, _customRenderers);
+        MonoGameClay.RenderCommands(commands, GraphicsDevice, _spriteBatch, _texturePrimitive, _scissorStack,_customRenderers);
 
         base.Draw(gameTime);
     }
@@ -134,7 +136,7 @@ public unsafe class CustomRenderExample : Game, IDisposable
         _customRenderers.Dispose();
         _clayString.Dispose();
         _spriteBatch?.Dispose();
-        MonoGameClay._whitePixel?.Dispose();
+        _texturePrimitive?.Dispose();
         _arena.Dispose();
     }
 }

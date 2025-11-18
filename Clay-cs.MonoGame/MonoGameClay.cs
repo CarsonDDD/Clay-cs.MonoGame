@@ -4,19 +4,15 @@ using System.Runtime.InteropServices;
 
 namespace Clay_cs.MonoGame;
 
+public struct ScissorFrame { public Rectangle Rect; public bool Enabled; }
+
 public class MonoGameClay
 {
-    public static SpriteFont[] Fonts = new SpriteFont[10];// Arbitrary10 font size limit for demo purposes
-    public static Texture2D _whitePixel;// Needed for drawing per pixel. Todo: find a better way
+    public static SpriteFont[] Fonts = new SpriteFont[10]; // I think may always need to be managed here since MeasureText needs it?!?!
 
+    // Very minimal overhead. It would be too ugly to force the user to define and pass these
     private static readonly RasterizerState RsScissorOff = new RasterizerState { ScissorTestEnable = false };
     private static readonly RasterizerState RsScissorOn = new RasterizerState { ScissorTestEnable = true };
-
-    private struct ScissorFrame{ public Rectangle Rect; public bool Enabled; }
-
-    private static readonly Stack<ScissorFrame> _scissorStack = new();
-
-
 
     private static Color ToColor(Clay_Color c) => new Color(
        (byte)MathF.Round(c.r),
@@ -69,7 +65,9 @@ public class MonoGameClay
         };
     }
 
-    public static unsafe void RenderCommands(Clay_RenderCommandArray array, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, 
+    public static unsafe void RenderCommands(Clay_RenderCommandArray array, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch,
+        Texture2D whitePixel, // needed for rectangle/primative drawing
+        Stack<ScissorFrame> scissorStack, // needed to remove state from this class
         CustomRenderCommandCollection? customRenders = null // optional
         )
     {
@@ -77,7 +75,7 @@ public class MonoGameClay
 
         Rectangle viewportRect = graphicsDevice.Viewport.Bounds;
 
-        _scissorStack.Clear();
+        scissorStack.Clear();
 
         for(int i = 0; i < array.length; i++)
         {
@@ -88,7 +86,7 @@ public class MonoGameClay
             {
                 case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_RECTANGLE:
                 {
-                    spriteBatch.Draw(_whitePixel,
+                    spriteBatch.Draw(whitePixel,
                         new Rectangle((int)MathF.Round(boundingBox.x), (int)MathF.Round(boundingBox.y), (int)MathF.Round(boundingBox.width), (int)MathF.Round(boundingBox.height)),
                         ToColor(renderCommand->renderData.rectangle.backgroundColor)
                     );
@@ -176,13 +174,13 @@ public class MonoGameClay
 
                     var color = ToColor(b.color);
 
-                    if(tw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x + tl, y, Math.Max(0, w - tl - tr), tw), color);
+                    if(tw > 0) spriteBatch.Draw(whitePixel, new Rectangle(x + tl, y, Math.Max(0, w - tl - tr), tw), color);
 
-                    if(bw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x + bl, y + h - bw, Math.Max(0, w - bl - br), bw), color);
+                    if(bw > 0) spriteBatch.Draw(whitePixel, new Rectangle(x + bl, y + h - bw, Math.Max(0, w - bl - br), bw), color);
 
-                    if(lw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x, y + tl, lw, Math.Max(0, h - tl - bl)), color);
+                    if(lw > 0) spriteBatch.Draw(whitePixel, new Rectangle(x, y + tl, lw, Math.Max(0, h - tl - bl)), color);
 
-                    if(rw > 0) spriteBatch.Draw(_whitePixel, new Rectangle(x + w - rw, y + tr, rw, Math.Max(0, h - tr - br)), color);
+                    if(rw > 0) spriteBatch.Draw(whitePixel, new Rectangle(x + w - rw, y + tr, rw, Math.Max(0, h - tr - br)), color);
 
                     // todo: corner rendering
                     break;
@@ -194,7 +192,7 @@ public class MonoGameClay
 
                     rect = Rectangle.Intersect(rect, viewportRect);
 
-                    _scissorStack.Push(new ScissorFrame
+                    scissorStack.Push(new ScissorFrame
                     {
                         Rect = graphicsDevice.ScissorRectangle,
                         Enabled = graphicsDevice.RasterizerState.ScissorTestEnable
@@ -209,7 +207,7 @@ public class MonoGameClay
                 {
                     spriteBatch.End();
 
-                    ScissorFrame prev = _scissorStack.Count > 0 ? _scissorStack.Pop() : default;
+                    ScissorFrame prev = scissorStack.Count > 0 ? scissorStack.Pop() : default;
 
                     if(prev.Enabled)
                     {

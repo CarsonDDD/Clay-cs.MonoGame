@@ -1,8 +1,8 @@
-﻿using Clay_cs.MonoGame;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Clay_cs.MonoGame.Examples;
@@ -12,6 +12,8 @@ public class IntroducingClay : Game, IDisposable
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private ClayArenaHandle _arena;
+    private Texture2D _texturePrimitive;
+    Stack<ScissorFrame> _scissorStack = new Stack<ScissorFrame>();
 
     private int _prevWheel;// Needed for mouse wheel delta calculation
 
@@ -48,8 +50,8 @@ public class IntroducingClay : Game, IDisposable
 
         // # boilerplate
         // Create a white pixel texture for drawing rectangles
-        MonoGameClay._whitePixel = new Texture2D(GraphicsDevice, 1, 1);
-        MonoGameClay._whitePixel.SetData(new[] { Color.White });
+        _texturePrimitive = new Texture2D(GraphicsDevice, 1, 1);
+        _texturePrimitive.SetData(new[] { Color.White });
         MonoGameClay.Fonts[0] = Content.Load<SpriteFont>("myfont");// DEMO FONT, you may need to add your own font to get it running
 
         uint requiredSize = Clay.MinMemorySize();
@@ -346,7 +348,7 @@ public class IntroducingClay : Game, IDisposable
         var commands = Clay.EndLayout();
 
         //_spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone);
-        MonoGameClay.RenderCommands(commands, GraphicsDevice, _spriteBatch);
+        MonoGameClay.RenderCommands(commands, GraphicsDevice, _spriteBatch, _texturePrimitive, _scissorStack);
         //_spriteBatch.End();
         // begin/end now is called inside >:|
 
@@ -397,5 +399,7 @@ public class IntroducingClay : Game, IDisposable
     public void Dispose()
     {
         _clayString.Dispose();
+        _texturePrimitive.Dispose();
+        _scissorStack.Clear();
     }
 }

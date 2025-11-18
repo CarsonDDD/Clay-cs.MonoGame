@@ -2,10 +2,10 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Clay_cs.MonoGame.Examples;
-
 
 /*
  todo:
@@ -21,6 +21,8 @@ public unsafe class ImageViewer : Game, IDisposable
     private int _prevWheel;// Needed for mouse wheel delta calculation
     private ClayStringCollection _clayString = new ClayStringCollection();
     private ClayTexture2DCollection _clayTexture = new ClayTexture2DCollection();
+    private Texture2D _texturePrimitive;
+    Stack<ScissorFrame> _scissorStack = new Stack<ScissorFrame>();
 
 
     // --- UI Specific code
@@ -49,8 +51,8 @@ public unsafe class ImageViewer : Game, IDisposable
 
         // # boilerplate
         // Create a white pixel texture for drawing rectangles
-        MonoGameClay._whitePixel = new Texture2D(GraphicsDevice, 1, 1);
-        MonoGameClay._whitePixel.SetData(new[] { Color.White });
+        _texturePrimitive = new Texture2D(GraphicsDevice, 1, 1);
+        _texturePrimitive.SetData(new[] { Color.White });
         MonoGameClay.Fonts[0] = Content.Load<SpriteFont>("myfont");// DEMO FONT, you may need to add your own font to get it running
 
         uint requiredSize = Clay.MinMemorySize();
@@ -203,7 +205,7 @@ public unsafe class ImageViewer : Game, IDisposable
 
         var commands = Clay.EndLayout();
 
-        MonoGameClay.RenderCommands(commands, GraphicsDevice, _spriteBatch);
+        MonoGameClay.RenderCommands(commands, GraphicsDevice, _spriteBatch, _texturePrimitive, _scissorStack);
 
         base.Draw(gameTime);
     }
@@ -212,5 +214,7 @@ public unsafe class ImageViewer : Game, IDisposable
     {
         _clayString.Dispose();
         _clayTexture.Dispose();
+        _texturePrimitive.Dispose();
+        _scissorStack.Clear();
     }
 }
