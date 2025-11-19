@@ -224,45 +224,60 @@ public class MonoGameClay
 
                 case Clay_RenderCommandType.CLAY_RENDER_COMMAND_TYPE_CUSTOM:
                 {
-                    var custom = renderCommand->renderData.custom;
                     try
                     {
                         if(customRenders == null) throw new ArgumentNullException("Custom renderers is null, while you are trying to use it");
 
-                        if(custom.customData == null) throw new ArgumentNullException("Custom render data pointer cannot be null");
-                        
-                        IDStruct renderData = *(IDStruct*)custom.customData;
-                        customRenders.TryGetValue(renderData.id, out CustomRenderCommandCollection.CustomRenderDelegate? handler);
 
-                        if(handler == null) throw new ArgumentNullException($"No custom renderer registered for id {renderData.id}\nraw: {custom}");
+                        void* customData = renderCommand->renderData.custom.customData;
+                        if(customData == null) throw new ArgumentNullException("Custom render data pointer cannot be null");
+
+                        CustomElementData.DecodeData(customData, out var id, out var flags);
+                        //bool preserveAspectRatio = (flags & CustomRendererToken.CustomRenderFlags.PreserveAspect) != 0;
+
+                        customRenders.TryGetValue(id, out CustomRenderCommandCollection.CustomRenderDelegate? handler);
+
+                        if(handler == null) throw new ArgumentNullException($"No custom renderer registered for id {id}\n");
+
+                        var renderData = renderCommand->renderData;
 
                         // todo: make use of these
-                        //renderCommand->renderData.clip;
-                        //renderCommand->renderData.rectangle
-                        //renderCommand->renderData.border
-                        //renderCommand->renderData.image
-                        //renderCommand->renderData.text;
-                        //renderCommand->renderData.custom.cornerRadius
-                        //renderCommand->renderData.custom.backgroundColor
+                        //renderData.clip;
+                        //renderData.rectangle
+                        //renderData.border
+                        //renderData.image
+                        //renderData.text;
+                        //renderData.custom.cornerRadius
+                        //renderData.custom.backgroundColor
+                        //renderCommand->boundingBox;
+                        //renderCommand->zIndex
                         // border
                         // clip
                         // cornerRadius
                         // floating
                         // userData
 
-                        if(renderCommand->renderData.rectangle.backgroundColor.a > 0)
+                        // renderData.custom.backgroundColor ???????
+                        /*if(renderData.rectangle.backgroundColor.a > 0)
                         {
                             spriteBatch.Draw(whitePixel,
                                 new Rectangle((int)MathF.Round(boundingBox.x), (int)MathF.Round(boundingBox.y), (int)MathF.Round(boundingBox.width), (int)MathF.Round(boundingBox.height)),
-                                ToColor(renderCommand->renderData.rectangle.backgroundColor)
+                                ToColor(renderData.rectangle.backgroundColor)
                             );
-                        }
+                        }*/
 
                         // Image just works out of the box? but not background?
+                        
+                        // Ok, so now the background color is automatically drawn?!?!?!?!?!
+                        // This is strange, because also aspect ratio is properly handled---while the only thing I changed was passing in an int instead of a struct???
 
+                        //bool ratio = renderCommand->renderData.
+                        handler(renderCommand->userData, boundingBox, graphicsDevice, spriteBatch);
 
-                        handler(custom.customData, boundingBox, graphicsDevice, spriteBatch);
-
+                    }
+                    catch(InvalidCastException ex)
+                    {
+                        throw new Exception("Error during custom render: Cannot cast void* renderCommand->renderData.custom.customData to a CustomRenderer\nNote: this is not hard inforced, but is supposed to be this struct which contains the Id to the renderer and any relevant information the renderer will need. This is DIFFERENT from renderCommand->userData, userData is whatever", ex);
                     }
                     catch(Exception ex)
                     {
@@ -308,5 +323,32 @@ public class MonoGameClay
         }
 
         // Special case...
+    }
+
+
+    public static (Rectangle bounds, Vector2 scale) CalculateGameWindowSizeScale(int designedWidth, int designedHeight, Clay_BoundingBox area)
+    {
+        float widthRatio = area.width / designedWidth;
+        float heightRatio = area.height / designedHeight;
+
+        float x0 = area.x;
+        float y0 = area.y;
+
+        float scaleX = widthRatio;
+        float scaleY = heightRatio;
+
+        // Clay does his directly?...
+       /* if(maintainAspectRatio)
+        {
+            float scale = MathF.Min(widthRatio, heightRatio);
+            scaleX = scale;
+            scaleY = scale;
+
+            // center in area
+            x0 += (area.width - (designedWidth * scale)) / 2f;
+            y0 += (area.height - (designedHeight * scale)) / 2f;
+        }*/
+
+        return (new Rectangle((int)MathF.Round(x0), (int)MathF.Round(y0), (int)MathF.Round(designedWidth * scaleX), (int)MathF.Round(designedHeight * scaleY)), new Vector2(scaleX, scaleY));
     }
 }

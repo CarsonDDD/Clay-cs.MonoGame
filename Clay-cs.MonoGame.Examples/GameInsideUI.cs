@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace Clay_cs.MonoGame.Examples;
 
@@ -35,8 +34,6 @@ public unsafe class GameInsideUI : Game, IDisposable
     private int _rightScore;
     private bool _paused;
     private bool _KeepAspectRatio = false;
-
-    [StructLayout(LayoutKind.Sequential)]struct GameWindowRenderData{public int id;public bool preserveAspect;}
 
     public GameInsideUI()
     {
@@ -79,62 +76,52 @@ public unsafe class GameInsideUI : Game, IDisposable
 
         _ballTexture = Content.Load<Texture2D>("image");
 
+        ResetGame();// init state
+
         // Custom renderer to render game WITH clay
-        _customRenderers.RegisterCustomRenderer(1, (void* customData, Clay_BoundingBox bb, GraphicsDevice gd, SpriteBatch sb) =>
+        _customRenderers.RegisterCustomRenderer(1, (void* userData, Clay_BoundingBox bb, GraphicsDevice gd, SpriteBatch sb) =>
         {
-            GameWindowRenderData data = *(GameWindowRenderData*)customData;
+            // setting to the graphics device for demo purposes
+            int designedGameViewPortWidth = gd.Viewport.Width;
+            int designedGameViewPortHeight = gd.Viewport.Height;
 
-            float designedGameViewPortWidth = gd.Viewport.Width; // setting to the graphics device for demo purposes
-            float designedGameViewPortHeight = gd.Viewport.Height;
+            var bounds = MonoGameClay.CalculateGameWindowSizeScale(designedGameViewPortWidth, designedGameViewPortHeight, bb);
 
-            float scaleX = bb.width / designedGameViewPortWidth;
-            float scaleY = bb.height / designedGameViewPortHeight;
+            float scaleX = bounds.scale.X;
+            float scaleY = bounds.scale.Y;
 
-            float offsetX = bb.x;
-            float offsetY = bb.y;
-            float sx = scaleX, sy = scaleY;
+            int x0 = bounds.bounds.X;
+            int y0 = bounds.bounds.Y;
 
-            if (data.preserveAspect)
-            {
-                float s = Math.Min(scaleX, scaleY);
-                sx = sy = s;
-
-                // center game content inside bounding box
-                float contentW = designedGameViewPortWidth * s;
-                float contentH = designedGameViewPortHeight * s;
-                offsetX = bb.x + (bb.width - contentW) * 0.5f;
-                offsetY = bb.y + (bb.height - contentH) * 0.5f;
-            }
+            // Render Game properly transformed to ui-space
 
             // left paddle
             var leftDst = new Rectangle(
-                (int)MathF.Round(offsetX + _leftPaddle.X * sx),
-                (int)MathF.Round(offsetY + _leftPaddle.Y * sy),
-                Math.Max(1, (int)MathF.Round(_leftPaddle.Width * sx)),
-                Math.Max(1, (int)MathF.Round(_leftPaddle.Height * sy))
+                (int)MathF.Round(x0 + _leftPaddle.X * scaleX),
+                (int)MathF.Round(y0 + _leftPaddle.Y * scaleY),
+                Math.Max(1, (int)MathF.Round(_leftPaddle.Width * scaleX)),
+                Math.Max(1, (int)MathF.Round(_leftPaddle.Height * scaleY))
             );
             sb.Draw(_texturePrimitive, leftDst, Color.White);
 
             // right paddle
             var rightDst = new Rectangle(
-                (int)MathF.Round(offsetX + _rightPaddle.X * sx),
-                (int)MathF.Round(offsetY + _rightPaddle.Y * sy),
-                Math.Max(1, (int)MathF.Round(_rightPaddle.Width * sx)),
-                Math.Max(1, (int)MathF.Round(_rightPaddle.Height * sy))
+                (int)MathF.Round(x0 + _rightPaddle.X * scaleX),
+                (int)MathF.Round(y0 + _rightPaddle.Y * scaleY),
+                Math.Max(1, (int)MathF.Round(_rightPaddle.Width * scaleX)),
+                Math.Max(1, (int)MathF.Round(_rightPaddle.Height * scaleY))
             );
             sb.Draw(_texturePrimitive, rightDst, Color.White);
 
             // ball
             var ballDst = new Rectangle(
-                (int)MathF.Round(offsetX + (_ballPos.X - _ballSize /2f) * sx),
-                (int)MathF.Round(offsetY + (_ballPos.Y - _ballSize /2f) * sy),
-                Math.Max(1, (int)MathF.Round(_ballSize * sx)),
-                Math.Max(1, (int)MathF.Round(_ballSize * sy))
+                (int)MathF.Round(x0 + (_ballPos.X - _ballSize /2f) * scaleX),
+                (int)MathF.Round(y0 + (_ballPos.Y - _ballSize /2f) * scaleY),
+                Math.Max(1, (int)MathF.Round(_ballSize * scaleX)),
+                Math.Max(1, (int)MathF.Round(_ballSize * scaleY))
             );
             sb.Draw(_ballTexture, ballDst, Color.Yellow);
         });
-
-        ResetGame();// init state
     }
 
     protected override void Update(GameTime gameTime)
@@ -213,8 +200,6 @@ public unsafe class GameInsideUI : Game, IDisposable
         RenderTopBar();
 
         // Game window INSIDE CLAY
-        // encode id and preserve flag into pointer-sized token: high bit = preserve, low bits = id
-        GameWindowRenderData renderData = new GameWindowRenderData { id = 1, preserveAspect = _KeepAspectRatio };
 
         using(Clay.Element(new Clay_ElementDeclaration
         {
@@ -235,7 +220,7 @@ public unsafe class GameInsideUI : Game, IDisposable
                     sizing = new Clay_Sizing(Clay_SizingAxis.Grow(), Clay_SizingAxis.Grow()),
                     childAlignment = new Clay_ChildAlignment(Clay_LayoutAlignmentX.CLAY_ALIGN_X_CENTER, Clay_LayoutAlignmentY.CLAY_ALIGN_Y_CENTER)
                 },
-                custom = new Clay_CustomElementConfig { customData = (void*)&renderData },
+                custom = new Clay_CustomElementConfig { customData = CustomElementData.SetData(id: 1) },
 
                 //userData = null,
 
@@ -251,21 +236,7 @@ public unsafe class GameInsideUI : Game, IDisposable
                 // clip
                 // cornerRadius
                 // floating
-                // userData
-
-            })) {
-
-                // Everything inside here will overlay the game screen
-                /*Clay.TextElement(_clayStrings.Get("test text"), new Clay_TextElementConfig
-                {
-                    fontId = 0,
-                    fontSize = 1,
-                    textColor = new Clay_Color(255, 255, 255)
-                });*/
-            }
-
-
-
+            })) { }
         }
 
 

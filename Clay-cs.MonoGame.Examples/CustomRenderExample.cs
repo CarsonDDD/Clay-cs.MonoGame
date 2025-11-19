@@ -21,12 +21,9 @@ public unsafe class CustomRenderExample : Game, IDisposable
 
 
     // ui code
-    [StructLayout(LayoutKind.Sequential)] struct CustomRenderData
+    struct CustomRenderData
     {
-        public int id; // id NEEDS to be first, and it NEEDS to be StructLayout
-        
-
-        public float anotherValue;
+        public string text;
     }
 
     public CustomRenderExample()
@@ -65,17 +62,17 @@ public unsafe class CustomRenderExample : Game, IDisposable
         Clay.SetMeasureTextFunction(MonoGameClay.MeasureText);
 
         // Define custom renderer
-        _customRenderers.RegisterCustomRenderer(1, (void* customData, Clay_BoundingBox bb, GraphicsDevice gd, SpriteBatch sb) =>
+        _customRenderers.RegisterCustomRenderer(1, (void* userData, Clay_BoundingBox bb, GraphicsDevice gd, SpriteBatch sb) =>
         {
             var rect = new Rectangle((int)MathF.Round(bb.x), (int)MathF.Round(bb.y), (int)MathF.Round(bb.width), (int)MathF.Round(bb.height));
             sb.Draw(_texturePrimitive, rect, Color.Magenta * 0.6f);
 
-            CustomRenderData data = *(CustomRenderData*)customData; // Cast void pointer into expected info
+            CustomRenderData data = *(CustomRenderData*)userData;
 
             var font = MonoGameClay.Fonts[0];
             if (font != null)
             {
-                string text = $"CUSTOM RENDER id:{data.id}, other:{data.anotherValue}";
+                string text = $"CUSTOM RENDER: " + data.text;
                 var size = font.MeasureString(text);
                 var pos = new Vector2(bb.x + (bb.width - size.X) / 2f, bb.y + (bb.height - size.Y) / 2f);
                 sb.DrawString(font, text, pos, Color.White);
@@ -105,11 +102,8 @@ public unsafe class CustomRenderExample : Game, IDisposable
         // spacer top
         using (Clay.Element(new Clay_ElementDeclaration { layout = new Clay_LayoutConfig { sizing = new Clay_Sizing(Clay_SizingAxis.Fixed(100), Clay_SizingAxis.Grow()) } })) { }
 
-        
-        CustomRenderData customData = new CustomRenderData() { 
-            id = 1,
-            anotherValue = 3.14f
-        };
+        CustomRenderData userData = new CustomRenderData { text = "Hello, World!!!!" };
+
         using (Clay.Element(new Clay_ElementDeclaration
         {
             layout = new Clay_LayoutConfig
@@ -117,8 +111,9 @@ public unsafe class CustomRenderExample : Game, IDisposable
                 sizing = new Clay_Sizing(Clay_SizingAxis.Fixed(400), Clay_SizingAxis.Fixed(200)),
                 childAlignment = new Clay_ChildAlignment(Clay_LayoutAlignmentX.CLAY_ALIGN_X_CENTER, Clay_LayoutAlignmentY.CLAY_ALIGN_Y_CENTER)
             },
-            custom = new Clay_CustomElementConfig { customData = (void*)&customData },
+            custom = new Clay_CustomElementConfig { customData = CustomElementData.SetData(1) },
             backgroundColor = new Clay_Color(100, 100, 20, 50),
+            userData = (void*)&userData
         }))
         {
             
