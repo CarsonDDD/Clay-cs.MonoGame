@@ -1,2 +1,2 @@
-﻿using var game = new Clay_cs.MonoGame.Examples.CustomRenderExample();
+﻿using var game = new Clay_cs.MonoGame.Examples.GameInsideUI();
 game.Run();

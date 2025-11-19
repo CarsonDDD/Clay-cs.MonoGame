@@ -23,6 +23,7 @@ public class MonoGameClay
 
     public static unsafe Clay_Dimensions MeasureText(Clay_StringSlice slice, Clay_TextElementConfig* config, void* userData)
     {
+        //Obviosuly, we store the fonts in userData (to remove the management here), but where is userData set?
         if(config->fontId >= Fonts.Length) return default;
         var font = Fonts[config->fontId];
         if(font == null) return default;
@@ -234,6 +235,30 @@ public class MonoGameClay
                         customRenders.TryGetValue(renderData.id, out CustomRenderCommandCollection.CustomRenderDelegate? handler);
 
                         if(handler == null) throw new ArgumentNullException($"No custom renderer registered for id {renderData.id}\nraw: {custom}");
+
+                        // todo: make use of these
+                        //renderCommand->renderData.clip;
+                        //renderCommand->renderData.rectangle
+                        //renderCommand->renderData.border
+                        //renderCommand->renderData.image
+                        //renderCommand->renderData.text;
+                        //renderCommand->renderData.custom.cornerRadius
+                        //renderCommand->renderData.custom.backgroundColor
+                        // border
+                        // clip
+                        // cornerRadius
+                        // floating
+                        // userData
+
+                        if(renderCommand->renderData.rectangle.backgroundColor.a > 0)
+                        {
+                            spriteBatch.Draw(whitePixel,
+                                new Rectangle((int)MathF.Round(boundingBox.x), (int)MathF.Round(boundingBox.y), (int)MathF.Round(boundingBox.width), (int)MathF.Round(boundingBox.height)),
+                                ToColor(renderCommand->renderData.rectangle.backgroundColor)
+                            );
+                        }
+
+                        // Image just works out of the box? but not background?
 
 
                         handler(custom.customData, boundingBox, graphicsDevice, spriteBatch);
