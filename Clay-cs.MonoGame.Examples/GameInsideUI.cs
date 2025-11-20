@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace Clay_cs.MonoGame.Examples;
 
@@ -220,7 +221,7 @@ public unsafe class GameInsideUI : Game, IDisposable
                     sizing = new Clay_Sizing(Clay_SizingAxis.Grow(), Clay_SizingAxis.Grow()),
                     childAlignment = new Clay_ChildAlignment(Clay_LayoutAlignmentX.CLAY_ALIGN_X_CENTER, Clay_LayoutAlignmentY.CLAY_ALIGN_Y_CENTER)
                 },
-                custom = new Clay_CustomElementConfig { customData = CustomElementData.SetData(id: 1) },
+                custom = new Clay_CustomElementConfig { customData = (void*)1 },
 
                 //userData = null,
 

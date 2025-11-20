@@ -232,8 +232,7 @@ public class MonoGameClay
                         void* customData = renderCommand->renderData.custom.customData;
                         if(customData == null) throw new ArgumentNullException("Custom render data pointer cannot be null");
 
-                        CustomElementData.DecodeData(customData, out var id, out var flags);
-                        //bool preserveAspectRatio = (flags & CustomRendererToken.CustomRenderFlags.PreserveAspect) != 0;
+                        int id = (int)(nint)customData;// custom data is supposed to be a pointer to an int representing the id of the custom renderer
 
                         customRenders.TryGetValue(id, out CustomRenderCommandCollection.CustomRenderDelegate? handler);
 
@@ -337,7 +336,7 @@ public class MonoGameClay
         float scaleX = widthRatio;
         float scaleY = heightRatio;
 
-        // Clay does his directly?...
+        // Clay does his automatically now?...
        /* if(maintainAspectRatio)
         {
             float scale = MathF.Min(widthRatio, heightRatio);
