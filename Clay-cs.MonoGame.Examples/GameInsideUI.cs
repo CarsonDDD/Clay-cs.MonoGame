@@ -366,6 +366,9 @@ public unsafe class GameInsideUI : Game, IDisposable
 
             // Padding makes this center
             Clay.TextElement(_clayStrings.Get("Score:"), new Clay_TextElementConfig { fontId = 0, fontSize = 1, textColor = new Clay_Color(220, 220, 220) });
+
+            // todo: dynamic strings may be bad, either manually dispose them; let the gc go brr; or manage a fixed size string to modify instead of allocating new ones
+            // ex: new string[4], then modify each char
             Clay.TextElement(_clayStrings.Get(_leftScore.ToString()), new Clay_TextElementConfig { fontId = 0, fontSize = 1, textColor = new Clay_Color(255, 255, 255) });
             Clay.TextElement(_clayStrings.Get("-"), new Clay_TextElementConfig { fontId = 0, fontSize = 1, textColor = new Clay_Color(200, 200, 200) });
             Clay.TextElement(_clayStrings.Get(_rightScore.ToString()), new Clay_TextElementConfig { fontId = 0, fontSize = 1, textColor = new Clay_Color(255, 255, 255) });
