@@ -14,7 +14,7 @@ Basic Example showing off a UI used for a game. In this example the UI is render
 
 ## 4. Custom Render Example
 
-Example to show off how to use the Custom Renderer feature from/for Clay, using `CustomRenderRegister` to define the renderer delegate with an id, and potentially `UserDataRegister` for passing data to the renderer.
+Example to show off how to use the Custom Renderer feature from/for Clay, using `CustomRenderRegister` to define the renderer delegate with an id, and potentially `UserDataRegister` for passing args to the renderer.
 
 ## 5. Game Inside UI
 
