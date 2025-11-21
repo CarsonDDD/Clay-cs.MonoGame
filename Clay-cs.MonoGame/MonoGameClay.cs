@@ -69,7 +69,7 @@ public class MonoGameClay
     public static unsafe void RenderCommands(Clay_RenderCommandArray array, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch,
         Texture2D whitePixel, // needed for rectangle/primative drawing
         Stack<ScissorFrame> scissorStack, // needed to remove state from this class
-        CustomRenderCommandCollection? customRenders = null // optional
+        CustomRenderRegister? customRenders = null // optional
         )
     {
         spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RsScissorOff);
@@ -234,7 +234,7 @@ public class MonoGameClay
 
                         int id = (int)(nint)customData;// custom data is supposed to be a pointer to an int representing the id of the custom renderer
 
-                        customRenders.TryGetValue(id, out CustomRenderCommandCollection.CustomRenderDelegate? handler);
+                        customRenders.TryGetValue(id, out CustomRenderRegister.CustomRenderDelegate? handler);
 
                         if(handler == null) throw new ArgumentNullException($"No custom renderer registered for id {id}\n");
 
