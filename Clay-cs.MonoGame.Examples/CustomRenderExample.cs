@@ -16,8 +16,8 @@ public unsafe class CustomRenderExample : Game, IDisposable
     private Texture2D _texturePrimitive;
     Stack<ScissorFrame> _scissorStack = new Stack<ScissorFrame>();
 
-    private CustomRenderCommandCollection _customRenderers = new CustomRenderCommandCollection();
-    private UserDataCollection _userDataCollection = new UserDataCollection();
+    private CustomRenderRegister _customRenderers = new CustomRenderRegister();
+    private UserDataRegister _userDataCollection = new UserDataRegister();
 
 
     public CustomRenderExample()

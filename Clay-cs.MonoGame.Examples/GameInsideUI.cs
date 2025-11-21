@@ -20,7 +20,7 @@ public unsafe class GameInsideUI : Game, IDisposable
     private ClayTexture2DCollection _clayTextures = new ClayTexture2DCollection();
     private Texture2D _texturePrimitive;
     Stack<ScissorFrame> _scissorStack = new Stack<ScissorFrame>();
-    private CustomRenderCommandCollection _customRenderers = new CustomRenderCommandCollection();
+    private CustomRenderRegister _customRenderers = new CustomRenderRegister();
 
     // Game state
     private Texture2D _ballTexture;

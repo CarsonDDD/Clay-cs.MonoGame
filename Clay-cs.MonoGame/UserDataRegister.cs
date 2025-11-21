@@ -4,7 +4,7 @@ namespace Clay_cs.MonoGame;
 // This class leaves memory management of the objects to the user
 // This is only for associating ids with void* UserData, so the data can be passed around (through passing its id)
 // Yes, GC go brrr
-public class UserDataCollection : IDisposable
+public class UserDataRegister : IDisposable
 {
     private readonly Dictionary<int, object?> _map = new();
     private readonly Stack<int> _free = new();

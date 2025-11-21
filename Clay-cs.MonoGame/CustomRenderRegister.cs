@@ -3,7 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace Clay_cs.MonoGame;
 
-public class CustomRenderCommandCollection: IDisposable
+// I have no clue what to name this. I cannot name it Collection, because 1: its then a very long name, but also 2: it has different functionality than string and texture2d
+public class CustomRenderRegister: IDisposable
 {
     public unsafe delegate void CustomRenderDelegate(void* userData, Clay_BoundingBox boundingBox, GraphicsDevice graphicsDevice, SpriteBatch spriteBatch);
 
